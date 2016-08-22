@@ -82,7 +82,7 @@ namespace Dapper.Tests
     {
         public static string ConnectionString =>
             IsAppVeyor
-                ? @"Server=(local)\SQL2014;Database=tempdb;User ID=sa;Password=Password12!"
+                ? @"Server=.;Database=tempdb;User ID=sa;Password=admin888"
                 : "Data Source=.;Initial Catalog=tempdb;Integrated Security=True";
 
         public static string OleDbConnectionString =>

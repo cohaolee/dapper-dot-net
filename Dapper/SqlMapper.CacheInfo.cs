@@ -6,6 +6,9 @@ namespace Dapper
 {
     partial class SqlMapper
     {
+        /// <summary>
+        /// 缓存信息
+        /// </summary>
         class CacheInfo
         {
             public DeserializerState Deserializer { get; set; }

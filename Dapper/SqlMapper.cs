@@ -31,6 +31,13 @@ namespace Dapper
     /// </summary>
     public static partial class SqlMapper
     {
+        /// <summary>
+        /// 获取列哈希
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="startBound">开始范围</param>
+        /// <param name="length"></param>
+        /// <returns></returns>
         static int GetColumnHash(IDataReader reader, int startBound = 0, int length = -1)
         {
             unchecked
@@ -46,9 +53,10 @@ namespace Dapper
             }
         }
 
-
+        #region _queryCache cohaolee
         /// <summary>
         /// Called if the query cache is purged via PurgeQueryCache
+        /// 当PurgeQueryCache的查询缓存清除时，调用（通知相关监听方，缓存被清除）
         /// </summary>
         public static event EventHandler QueryCachePurged;
         private static void OnQueryCachePurged()
@@ -60,7 +68,7 @@ namespace Dapper
         static readonly System.Collections.Concurrent.ConcurrentDictionary<Identity, CacheInfo> _queryCache = new System.Collections.Concurrent.ConcurrentDictionary<Identity, CacheInfo>();
         private static void SetQueryCache(Identity key, CacheInfo value)
         {
-            if (Interlocked.Increment(ref collect) == COLLECT_PER_ITEMS)
+            if (Interlocked.Increment(ref collect) == COLLECT_PER_ITEMS)//设置COLLECT_PER_ITEMS次后调用一次收集
             {
                 CollectCacheGarbage();
             }
@@ -102,6 +110,7 @@ namespace Dapper
 
         /// <summary>
         /// Purge the query cache
+        /// 清除查询缓存 _queryCache和TypeDeserializerCache
         /// </summary>
         public static void PurgeQueryCache()
         {
@@ -110,6 +119,10 @@ namespace Dapper
             OnQueryCachePurged();
         }
 
+        /// <summary>
+        /// 清除指定类型的的查询缓存 _queryCache和TypeDeserializerCache
+        /// </summary>
+        /// <param name="type"></param>
         private static void PurgeQueryCacheByType(Type type)
         {
             foreach (var entry in _queryCache)
@@ -123,6 +136,7 @@ namespace Dapper
 
         /// <summary>
         /// Return a count of all the cached queries by dapper
+        /// 返回缓存的sql总数
         /// </summary>
         /// <returns></returns>
         public static int GetCachedSQLCount()
@@ -132,8 +146,9 @@ namespace Dapper
 
         /// <summary>
         /// Return a list of all the queries cached by dapper
+        /// 应该是用于调试监控，返回所有查询缓存 迭代器
         /// </summary>
-        /// <param name="ignoreHitCountAbove"></param>
+        /// <param name="ignoreHitCountAbove">查找低于命中数的记录</param>
         /// <returns></returns>
         public static IEnumerable<Tuple<string, string, int>> GetCachedSQL(int ignoreHitCountAbove = int.MaxValue)
         {
@@ -144,6 +159,7 @@ namespace Dapper
 
         /// <summary>
         /// Deep diagnostics only: find any hash collisions in the cache
+        /// 在深度调试时使用：找出有缓存中的Hash冲突
         /// </summary>
         /// <returns></returns>
         public static IEnumerable<Tuple<int, int>> GetHashCollissions()
@@ -167,6 +183,7 @@ namespace Dapper
 
         }
 
+        #endregion
 
         static Dictionary<Type, DbType> typeMap;
 

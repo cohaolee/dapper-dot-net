@@ -17,6 +17,8 @@ namespace Dapper
             }
             static readonly Hashtable byType = new Hashtable();
             private readonly Type type;
+
+            //清理指定类型
             internal static void Purge(Type type)
             {
                 lock (byType)
@@ -24,6 +26,8 @@ namespace Dapper
                     byType.Remove(type);
                 }
             }
+
+            //清除
             internal static void Purge()
             {
                 lock (byType)

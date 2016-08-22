@@ -7,6 +7,7 @@ namespace Dapper
     {
         /// <summary>
         /// Identity of a cached query in Dapper, used for extensibility
+        /// 标识一个缓存的查询，用于扩展能力
         /// </summary>
         public class Identity : IEquatable<Identity>
         {

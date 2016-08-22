@@ -51,6 +51,11 @@ namespace Dapper.Contrib.Extensions
                 {"mysqlconnection", new MySqlAdapter()},
             };
 
+        /// <summary>
+        /// 获取标识为ComputedAttribute的属性缓存
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         private static List<PropertyInfo> ComputedPropertiesCache(Type type)
         {
             IEnumerable<PropertyInfo> pi;
@@ -65,6 +70,11 @@ namespace Dapper.Contrib.Extensions
             return computedProperties;
         }
 
+        /// <summary>
+        /// 获取显式Key
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         private static List<PropertyInfo> ExplicitKeyPropertiesCache(Type type)
         {
             IEnumerable<PropertyInfo> pi;
@@ -79,6 +89,12 @@ namespace Dapper.Contrib.Extensions
             return explicitKeyProperties;
         }
 
+        /// <summary>
+        /// 获取Key属性缓存（主键）
+        /// 获取KeyAttribute或名为id，而非ExplicitKeyAttribute的属性
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         private static List<PropertyInfo> KeyPropertiesCache(Type type)
         {
 
@@ -107,6 +123,11 @@ namespace Dapper.Contrib.Extensions
             return keyProperties;
         }
 
+        /// <summary>
+        /// 获取类型属性缓存
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         private static List<PropertyInfo> TypePropertiesCache(Type type)
         {
             IEnumerable<PropertyInfo> pis;
@@ -247,6 +268,17 @@ namespace Dapper.Contrib.Extensions
         /// </summary>
         public static TableNameMapperDelegate TableNameMapper;
 
+        /// <summary>
+        /// 获取表名
+        /// 规则：
+        /// 1.缓存
+        /// 2.自定义映射逻辑 委托
+        /// 3.是否有TableAttribute属性，有责去Name配置
+        /// 4.使用type.Name
+        /// 5.如果是接口 去掉I
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         private static string GetTableName(Type type)
         {
             string name;
@@ -293,30 +325,30 @@ namespace Dapper.Contrib.Extensions
 
             var type = typeof(T);
 
-            if (type.IsArray)
+            if (type.IsArray)//是否是数组
             {
                 isList = true;
                 type = type.GetElementType();
             }
-            else if (type.IsGenericType())
+            else if (type.IsGenericType())//是否泛型
             {
                 isList = true;
                 type = type.GetGenericArguments()[0];
             }
 
-            var name = GetTableName(type);
+            var name = GetTableName(type);//获取表明
             var sbColumnList = new StringBuilder(null);
-            var allProperties = TypePropertiesCache(type);
-            var keyProperties = KeyPropertiesCache(type);
+            var allProperties = TypePropertiesCache(type);//获取属性
+            var keyProperties = KeyPropertiesCache(type);//获取key属性
             var computedProperties = ComputedPropertiesCache(type);
             var allPropertiesExceptKeyAndComputed = allProperties.Except(keyProperties.Union(computedProperties)).ToList();
 
-            var adapter = GetFormatter(connection);
+            var adapter = GetFormatter(connection); //获取数据库适配器类型（mssql，mysql）
 
             for (var i = 0; i < allPropertiesExceptKeyAndComputed.Count; i++)
             {
                 var property = allPropertiesExceptKeyAndComputed.ElementAt(i);
-                adapter.AppendColumnName(sbColumnList, property.Name);  //fix for issue #336
+                adapter.AppendColumnName(sbColumnList, property.Name);  //fix for issue #336   //拼接字段名，不同数据库，不同的拼接字符串方法
                 if (i < allPropertiesExceptKeyAndComputed.Count - 1)
                     sbColumnList.Append(", ");
             }

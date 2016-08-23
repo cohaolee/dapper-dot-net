@@ -185,50 +185,51 @@ namespace Dapper
 
         #endregion
 
+        #region typeMap<Type, DbType> ITypeHandler<Type, ITypeHandler>
         static Dictionary<Type, DbType> typeMap;
 
         static SqlMapper()
         {
             typeMap = new Dictionary<Type, DbType>
-                      {
-                          [typeof(byte)] = DbType.Byte,
-                          [typeof(sbyte)] = DbType.SByte,
-                          [typeof(short)] = DbType.Int16,
-                          [typeof(ushort)] = DbType.UInt16,
-                          [typeof(int)] = DbType.Int32,
-                          [typeof(uint)] = DbType.UInt32,
-                          [typeof(long)] = DbType.Int64,
-                          [typeof(ulong)] = DbType.UInt64,
-                          [typeof(float)] = DbType.Single,
-                          [typeof(double)] = DbType.Double,
-                          [typeof(decimal)] = DbType.Decimal,
-                          [typeof(bool)] = DbType.Boolean,
-                          [typeof(string)] = DbType.String,
-                          [typeof(char)] = DbType.StringFixedLength,
-                          [typeof(Guid)] = DbType.Guid,
-                          [typeof(DateTime)] = DbType.DateTime,
-                          [typeof(DateTimeOffset)] = DbType.DateTimeOffset,
-                          [typeof(TimeSpan)] = DbType.Time,
-                          [typeof(byte[])] = DbType.Binary,
-                          [typeof(byte?)] = DbType.Byte,
-                          [typeof(sbyte?)] = DbType.SByte,
-                          [typeof(short?)] = DbType.Int16,
-                          [typeof(ushort?)] = DbType.UInt16,
-                          [typeof(int?)] = DbType.Int32,
-                          [typeof(uint?)] = DbType.UInt32,
-                          [typeof(long?)] = DbType.Int64,
-                          [typeof(ulong?)] = DbType.UInt64,
-                          [typeof(float?)] = DbType.Single,
-                          [typeof(double?)] = DbType.Double,
-                          [typeof(decimal?)] = DbType.Decimal,
-                          [typeof(bool?)] = DbType.Boolean,
-                          [typeof(char?)] = DbType.StringFixedLength,
-                          [typeof(Guid?)] = DbType.Guid,
-                          [typeof(DateTime?)] = DbType.DateTime,
-                          [typeof(DateTimeOffset?)] = DbType.DateTimeOffset,
-                          [typeof(TimeSpan?)] = DbType.Time,
-                          [typeof(object)] = DbType.Object
-                      };
+            {
+                [typeof(byte)] = DbType.Byte,
+                [typeof(sbyte)] = DbType.SByte,
+                [typeof(short)] = DbType.Int16,
+                [typeof(ushort)] = DbType.UInt16,
+                [typeof(int)] = DbType.Int32,
+                [typeof(uint)] = DbType.UInt32,
+                [typeof(long)] = DbType.Int64,
+                [typeof(ulong)] = DbType.UInt64,
+                [typeof(float)] = DbType.Single,
+                [typeof(double)] = DbType.Double,
+                [typeof(decimal)] = DbType.Decimal,
+                [typeof(bool)] = DbType.Boolean,
+                [typeof(string)] = DbType.String,
+                [typeof(char)] = DbType.StringFixedLength,
+                [typeof(Guid)] = DbType.Guid,
+                [typeof(DateTime)] = DbType.DateTime,
+                [typeof(DateTimeOffset)] = DbType.DateTimeOffset,
+                [typeof(TimeSpan)] = DbType.Time,
+                [typeof(byte[])] = DbType.Binary,
+                [typeof(byte?)] = DbType.Byte,
+                [typeof(sbyte?)] = DbType.SByte,
+                [typeof(short?)] = DbType.Int16,
+                [typeof(ushort?)] = DbType.UInt16,
+                [typeof(int?)] = DbType.Int32,
+                [typeof(uint?)] = DbType.UInt32,
+                [typeof(long?)] = DbType.Int64,
+                [typeof(ulong?)] = DbType.UInt64,
+                [typeof(float?)] = DbType.Single,
+                [typeof(double?)] = DbType.Double,
+                [typeof(decimal?)] = DbType.Decimal,
+                [typeof(bool?)] = DbType.Boolean,
+                [typeof(char?)] = DbType.StringFixedLength,
+                [typeof(Guid?)] = DbType.Guid,
+                [typeof(DateTime?)] = DbType.DateTime,
+                [typeof(DateTimeOffset?)] = DbType.DateTimeOffset,
+                [typeof(TimeSpan?)] = DbType.Time,
+                [typeof(object)] = DbType.Object
+            };
             ResetTypeHandlers(false);
         }
 
@@ -266,9 +267,11 @@ namespace Dapper
 
         /// <summary>
         /// Configure the specified type to be mapped to a given db-type
+        /// 配置指定类型到TypeMap
         /// </summary>
         public static void AddTypeMap(Type type, DbType dbType)
         {
+            //使用拷贝处理的方式避免多线程问题
             // use clone, mutate, replace to avoid threading issues
             var snapshot = typeMap;
 
@@ -294,16 +297,20 @@ namespace Dapper
 
         /// <summary>
         /// Configure the specified type to be processed by a custom handler
+        /// 配置自定义的处理器处理指定的类型
         /// </summary>
+        /// <param name="type"></param>
+        /// <param name="handler"></param>
+        /// <param name="clone">使用克隆方式进行添加</param>
         public static void AddTypeHandlerImpl(Type type, ITypeHandler handler, bool clone)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            Type secondary = null;
-            if(type.IsValueType())
+            Type secondary = null; //type对应的可空类型
+            if (type.IsValueType())//是否值类型
             {
-                var underlying = Nullable.GetUnderlyingType(type);
-                if(underlying == null)
+                var underlying = Nullable.GetUnderlyingType(type);//获取可空类型的值类型
+                if (underlying == null)//非可空，创建可空类型
                 {
                     secondary = typeof(Nullable<>).MakeGenericType(type); // the Nullable<T>
                     // type is already the T
@@ -323,7 +330,7 @@ namespace Dapper
 
 #pragma warning disable 618
             typeof(TypeHandlerCache<>).MakeGenericType(type).GetMethod(nameof(TypeHandlerCache<int>.SetHandler), BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { handler });
-            if(secondary != null)
+            if (secondary != null)
             {
                 typeof(TypeHandlerCache<>).MakeGenericType(secondary).GetMethod(nameof(TypeHandlerCache<int>.SetHandler), BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { handler });
             }
@@ -336,7 +343,7 @@ namespace Dapper
             else
             {
                 newCopy[type] = handler;
-                if(secondary != null) newCopy[secondary] = handler;
+                if (secondary != null) newCopy[secondary] = handler;
             }
             typeHandlers = newCopy;
         }
@@ -357,6 +364,7 @@ namespace Dapper
 
         /// <summary>
         /// Get the DbType that maps to a given value
+        /// 获取参数类型对应的DBType
         /// </summary>
         [Obsolete(ObsoleteInternalUsageOnly, false)]
 #if !COREFX
@@ -374,7 +382,13 @@ namespace Dapper
 
         /// <summary>
         /// OBSOLETE: For internal usage only. Lookup the DbType and handler for a given Type and member
+        /// 为给定的类型或成员查找DbType和对应的处理器
         /// </summary>
+        /// <param name="type"></param>
+        /// <param name="name"></param>
+        /// <param name="demand">强制要求，true如果没有找到则抛出NotSupportedException，false没有找到的情况下就返回DbType.Object</param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
         [Obsolete(ObsoleteInternalUsageOnly, false)]
 #if !COREFX
         [Browsable(false)]
@@ -421,23 +435,26 @@ namespace Dapper
                     return DbType.Object;
             }
 #endif
-            if(demand)
+            if (demand)
                 throw new NotSupportedException($"The member {name} of type {type.FullName} cannot be used as a parameter value");
             return DbType.Object;
 
         }
 
+        #endregion
 
 
         /// <summary>
         /// Obtains the data as a list; if it is *already* a list, the original object is returned without
         /// any duplication; otherwise, ToList() is invoked.
+        /// 获取转换为list的数据，如果已经是list则返回原值，不是则调用ToList
         /// </summary>
         public static List<T> AsList<T>(this IEnumerable<T> source)
         {
             return (source == null || source is List<T>) ? (List<T>)source : source.ToList();
         }
 
+        #region Execute相关
         /// <summary>
         /// Execute parameterized SQL
         /// </summary>
@@ -459,6 +476,83 @@ namespace Dapper
         }
 
 
+        private static IEnumerable GetMultiExec(object param)
+        {
+            return (param is IEnumerable &&
+                    !(param is string ||
+                      param is IEnumerable<KeyValuePair<string, object>> ||
+                      param is IDynamicParameters)
+                ) ? (IEnumerable)param : null;
+        }
+
+        /// <summary>
+        /// 命令执行的实现
+        /// </summary>
+        /// <param name="cnn"></param>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        private static int ExecuteImpl(this IDbConnection cnn, ref CommandDefinition command)
+        {
+            object param = command.Parameters;
+            IEnumerable multiExec = GetMultiExec(param);
+            Identity identity;
+            CacheInfo info = null;
+            if (multiExec != null)
+            {
+#if ASYNC
+                if ((command.Flags & CommandFlags.Pipelined) != 0)
+                {
+                    // this includes all the code for concurrent/overlapped query
+                    return ExecuteMultiImplAsync(cnn, command, multiExec).Result;
+                }
+#endif
+                bool isFirst = true;
+                int total = 0;
+                bool wasClosed = cnn.State == ConnectionState.Closed;
+                try
+                {
+                    if (wasClosed) cnn.Open();
+                    using (var cmd = command.SetupCommand(cnn, null))
+                    {
+                        string masterSql = null;
+                        foreach (var obj in multiExec)
+                        {
+                            if (isFirst)
+                            {
+                                masterSql = cmd.CommandText;
+                                isFirst = false;
+                                identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
+                                info = GetCacheInfo(identity, obj, command.AddToCache);
+                            }
+                            else
+                            {
+                                cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
+                                cmd.Parameters.Clear(); // current code is Add-tastic
+                            }
+                            info.ParamReader(cmd, obj);
+                            total += cmd.ExecuteNonQuery();
+                        }
+                    }
+                    command.OnCompleted();
+                }
+                finally
+                {
+                    if (wasClosed) cnn.Close();
+                }
+                return total;
+            }
+
+            // nice and simple
+            if (param != null)
+            {
+                identity = new Identity(command.CommandText, command.CommandType, cnn, null, param.GetType(), null);
+                info = GetCacheInfo(identity, param, command.AddToCache);
+            }
+            return ExecuteCommand(cnn, ref command, param == null ? null : info.ParamReader);
+        }
+        #endregion
+
+        #region ExecuteScalar
         /// <summary>
         /// Execute parameterized SQL that selects a single value
         /// </summary>
@@ -500,75 +594,9 @@ namespace Dapper
         {
             return ExecuteScalarImpl<T>(cnn, ref command);
         }
+        #endregion
 
-        private static IEnumerable GetMultiExec(object param)
-        {
-            return (param is IEnumerable &&
-                    !(param is string ||
-                      param is IEnumerable<KeyValuePair<string, object>> ||
-                      param is IDynamicParameters)
-                ) ? (IEnumerable) param : null;
-        }
-
-        private static int ExecuteImpl(this IDbConnection cnn, ref CommandDefinition command)
-        {
-            object param = command.Parameters;
-            IEnumerable multiExec = GetMultiExec(param);
-            Identity identity;
-            CacheInfo info = null;
-            if (multiExec != null)
-            {
-#if ASYNC
-                if((command.Flags & CommandFlags.Pipelined) != 0)
-                {
-                    // this includes all the code for concurrent/overlapped query
-                    return ExecuteMultiImplAsync(cnn, command, multiExec).Result;
-                }
-#endif
-                bool isFirst = true;
-                int total = 0;
-                bool wasClosed = cnn.State == ConnectionState.Closed;
-                try
-                {
-                    if (wasClosed) cnn.Open();
-                    using (var cmd = command.SetupCommand(cnn, null))
-                    {
-                        string masterSql = null;
-                        foreach (var obj in multiExec)
-                        {
-                            if (isFirst)
-                            {
-                                masterSql = cmd.CommandText;
-                                isFirst = false;
-                                identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
-                                info = GetCacheInfo(identity, obj, command.AddToCache);
-                            }
-                            else
-                            {
-                                cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
-                                cmd.Parameters.Clear(); // current code is Add-tastic
-                            }
-                            info.ParamReader(cmd, obj);
-                            total += cmd.ExecuteNonQuery();
-                        }
-                    }
-                    command.OnCompleted();
-                } finally
-                {
-                    if (wasClosed) cnn.Close();
-                }
-                return total;
-            }
-
-            // nice and simple
-            if (param != null)
-            {
-                identity = new Identity(command.CommandText, command.CommandType, cnn, null, param.GetType(), null);
-                info = GetCacheInfo(identity, param, command.AddToCache);
-            }
-            return ExecuteCommand(cnn, ref command, param == null ? null : info.ParamReader);
-        }
-
+        #region ExecuteReader
         /// <summary>
         /// Execute parameterized SQL and return an <see cref="IDataReader"/>
         /// </summary>
@@ -625,8 +653,10 @@ namespace Dapper
             IDbCommand dbcmd;
             var reader = ExecuteReaderImpl(cnn, ref command, commandBehavior, out dbcmd);
             return new WrappedReader(dbcmd, reader);
-        }
+        } /**/
+        #endregion
 
+        #region Query QueryFirst QueryFirstOrDefault QuerySingle  QuerySingleOrDefault--->dynamic DapperRow
         /// <summary>
         /// Return a sequence of dynamic objects with properties matching the columns
         /// </summary>
@@ -668,7 +698,9 @@ namespace Dapper
         {
             return QuerySingleOrDefault<DapperRow>(cnn, sql, param as object, transaction, commandTimeout, commandType);
         }
+        #endregion
 
+        #region Query QueryFirst QueryFirstOrDefault QuerySingle  QuerySingleOrDefault---><T>
         /// <summary>
         /// Executes a query, returning the data typed as per T
         /// </summary>
@@ -735,8 +767,10 @@ namespace Dapper
         {
             var command = new CommandDefinition(sql, param, transaction, commandTimeout, commandType, CommandFlags.None);
             return QueryRowImpl<T>(cnn, Row.SingleOrDefault, ref command, typeof(T));
-        }
+        } /**/
+        #endregion
 
+        #region Query QueryFirst QueryFirstOrDefault QuerySingle  QuerySingleOrDefault--->object
         /// <summary>
         /// Executes a single-row query, returning the data typed as per the Type suggested
         /// </summary>
@@ -763,7 +797,7 @@ namespace Dapper
         )
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            var command = new CommandDefinition(sql, param, transaction, commandTimeout, commandType,  CommandFlags.None);
+            var command = new CommandDefinition(sql, param, transaction, commandTimeout, commandType, CommandFlags.None);
             return QueryRowImpl<object>(cnn, Row.First, ref command, type);
         }
         /// <summary>
@@ -808,6 +842,9 @@ namespace Dapper
             var command = new CommandDefinition(sql, param, transaction, commandTimeout, commandType, CommandFlags.None);
             return QueryRowImpl<object>(cnn, Row.SingleOrDefault, ref command, type);
         }
+        #endregion
+
+        #region Query QueryFirst QueryFirstOrDefault QuerySingle  QuerySingleOrDefault---><T>参数重载（2个参数）
         /// <summary>
         /// Executes a query, returning the data typed as per T
         /// </summary>
@@ -865,8 +902,9 @@ namespace Dapper
         {
             return QueryRowImpl<T>(cnn, Row.SingleOrDefault, ref command, typeof(T));
         }
+        #endregion
 
-
+        #region QueryMultiple --> GridReader
         /// <summary>
         /// Execute a command that returns multiple result sets, and access each in turn
         /// </summary>
@@ -937,6 +975,9 @@ namespace Dapper
                 throw;
             }
         }
+        #endregion
+
+        #region QueryImpl  
         private static IEnumerable<T> QueryImpl<T>(this IDbConnection cnn, CommandDefinition command, Type effectiveType)
         {
             object param = command.Parameters;
@@ -964,7 +1005,7 @@ namespace Dapper
                     if (reader.FieldCount == 0) //https://code.google.com/p/dapper-dot-net/issues/detail?id=57
                         yield break;
                     tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
-                    if(command.AddToCache) SetQueryCache(identity, info);
+                    if (command.AddToCache) SetQueryCache(identity, info);
                 }
 
                 var func = tuple.Func;
@@ -972,9 +1013,12 @@ namespace Dapper
                 while (reader.Read())
                 {
                     object val = func(reader);
-					if (val == null || val is T) {
+                    if (val == null || val is T)
+                    {
                         yield return (T)val;
-                    } else {
+                    }
+                    else
+                    {
                         yield return (T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture);
                     }
                 }
@@ -1099,7 +1143,9 @@ namespace Dapper
                 cmd?.Dispose();
             }
         }
+        #endregion
 
+        #region MultiMap & MultiMapImpl
         /// <summary>
         /// Maps a query to objects
         /// </summary>
@@ -1307,10 +1353,10 @@ namespace Dapper
                 int hash = GetColumnHash(reader);
                 if ((deserializer = cinfo.Deserializer).Func == null || (otherDeserializers = cinfo.OtherDeserializers) == null || hash != deserializer.Hash)
                 {
-                    var deserializers = GenerateDeserializers(new [] { typeof(TFirst), typeof(TSecond), typeof(TThird), typeof(TFourth), typeof(TFifth), typeof(TSixth), typeof(TSeventh) }, splitOn, reader);
+                    var deserializers = GenerateDeserializers(new[] { typeof(TFirst), typeof(TSecond), typeof(TThird), typeof(TFourth), typeof(TFifth), typeof(TSixth), typeof(TSeventh) }, splitOn, reader);
                     deserializer = cinfo.Deserializer = new DeserializerState(hash, deserializers[0]);
                     otherDeserializers = cinfo.OtherDeserializers = deserializers.Skip(1).ToArray();
-                    if(command.AddToCache) SetQueryCache(identity, cinfo);
+                    if (command.AddToCache) SetQueryCache(identity, cinfo);
                 }
 
                 Func<IDataReader, TReturn> mapIt = GenerateMapper<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TSeventh, TReturn>(deserializer.Func, otherDeserializers, map);
@@ -1321,7 +1367,7 @@ namespace Dapper
                     {
                         yield return mapIt(reader);
                     }
-                    if(finalize)
+                    if (finalize)
                     {
                         while (reader.NextResult()) { }
                         command.OnCompleted();
@@ -1340,27 +1386,9 @@ namespace Dapper
                     if (wasClosed) cnn.Close();
                 }
             }
-        }
-        const CommandBehavior DefaultAllowedCommandBehaviors = ~((CommandBehavior)0);
-        static CommandBehavior allowedCommandBehaviors = DefaultAllowedCommandBehaviors;
-        private static bool DisableCommandBehaviorOptimizations(CommandBehavior behavior, Exception ex)
-        {
-            if(allowedCommandBehaviors == DefaultAllowedCommandBehaviors
-                && (behavior & (CommandBehavior.SingleResult | CommandBehavior.SingleRow)) != 0)
-            {
-                if (ex.Message.Contains(nameof(CommandBehavior.SingleResult))
-                    || ex.Message.Contains(nameof(CommandBehavior.SingleRow)))
-                { // some providers just just allow these, so: try again without them and stop issuing them
-                    allowedCommandBehaviors = ~(CommandBehavior.SingleResult | CommandBehavior.SingleRow);
-                    return true;
-                }
-            }
-            return false;
-        }
-        private static CommandBehavior GetBehavior(bool close, CommandBehavior @default)
-        {
-            return (close ? (@default | CommandBehavior.CloseConnection) : @default) & allowedCommandBehaviors;
-        }
+        } /**/
+
+
         static IEnumerable<TReturn> MultiMapImpl<TReturn>(this IDbConnection cnn, CommandDefinition command, Type[] types, Func<object[], TReturn> map, string splitOn, IDataReader reader, Identity identity, bool finalize)
         {
             if (types.Length < 1)
@@ -1425,7 +1453,32 @@ namespace Dapper
                 }
             }
         }
+        #endregion
 
+        #region CommandBehaviors
+        const CommandBehavior DefaultAllowedCommandBehaviors = ~((CommandBehavior)0);
+        static CommandBehavior allowedCommandBehaviors = DefaultAllowedCommandBehaviors;
+        private static bool DisableCommandBehaviorOptimizations(CommandBehavior behavior, Exception ex)
+        {
+            if (allowedCommandBehaviors == DefaultAllowedCommandBehaviors
+                && (behavior & (CommandBehavior.SingleResult | CommandBehavior.SingleRow)) != 0)
+            {
+                if (ex.Message.Contains(nameof(CommandBehavior.SingleResult))
+                    || ex.Message.Contains(nameof(CommandBehavior.SingleRow)))
+                { // some providers just just allow these, so: try again without them and stop issuing them
+                    allowedCommandBehaviors = ~(CommandBehavior.SingleResult | CommandBehavior.SingleRow);
+                    return true;
+                }
+            }
+            return false;
+        }
+        private static CommandBehavior GetBehavior(bool close, CommandBehavior @default)
+        {
+            return (close ? (@default | CommandBehavior.CloseConnection) : @default) & allowedCommandBehaviors;
+        }
+        #endregion
+
+        #region GenerateMapper
         private static Func<IDataReader, TReturn> GenerateMapper<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TSeventh, TReturn>(Func<IDataReader, object> deserializer, Func<IDataReader, object>[] otherDeserializers, object map)
         {
             switch (otherDeserializers.Length)
@@ -1461,7 +1514,8 @@ namespace Dapper
 
                 return map(objects);
             };
-        }
+        } 
+        #endregion
 
         private static Func<IDataReader, object>[] GenerateDeserializers(Type[] types, string splitOn, IDataReader reader)
         {

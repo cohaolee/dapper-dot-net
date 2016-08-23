@@ -15,6 +15,7 @@ namespace Dapper
 
     /// <summary>
     /// A bag of parameters that can be passed to the Dapper Query and Execute methods
+    /// 参数集合，用于传递Dapper Query and Execute methods
     /// </summary>
     public partial class DynamicParameters : SqlMapper.IDynamicParameters, SqlMapper.IParameterLookup, SqlMapper.IParameterCallbacks
     {

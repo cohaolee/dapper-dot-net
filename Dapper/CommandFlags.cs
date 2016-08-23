@@ -15,14 +15,17 @@ namespace Dapper
         None = 0,
         /// <summary>
         /// Should data be buffered before returning?
+        /// 在返回结果前进行缓冲处理
         /// </summary>
         Buffered = 1,
         /// <summary>
         /// Can async queries be pipelined?
+        /// 通过管道进行异步查询
         /// </summary>
         Pipelined = 2,
         /// <summary>
         /// Should the plan cache be bypassed?
+        /// 是否绕过缓存
         /// </summary>
         NoCache = 4,
     }

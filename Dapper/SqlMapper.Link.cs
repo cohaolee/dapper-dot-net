@@ -8,6 +8,9 @@ namespace Dapper
         /// This is a micro-cache; suitable when the number of terms is controllable (a few hundred, for example),
         /// and strictly append-only; you cannot change existing values. All key matches are on **REFERENCE**
         /// equality. The type is fully thread-safe.
+        /// 微型缓存，元素数量是适当可控的（比如几百）。
+        /// 严格控制只能追加，你不能改变已存在的值。所有key的匹配时相对公平的。
+        /// 类型线程安全
         /// </summary>
         internal class Link<TKey, TValue> where TKey : class
         {
